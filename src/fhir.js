@@ -34,23 +34,21 @@
     });
 
     var BundleRelUrl =  function(rel){
-        return Operation(function(h) {
-            return function(args){
-                var matched = function(x){return x.rel && x.rel === rel;};
-                var res =  args.bundle && (args.bundle.link || []).filter(matched)[0];
-                if(res && res.href){
-                    args.url = res.href;
-                    return h(args);
-                }
-                else{
-                    throw new Error("No " + rel + " link found in bundle");
-                }
-            };
-        });
+        return function(args){
+            var matched = function(x){return x.rel && x.rel === rel;};
+            var res =  args.bundle && (args.bundle.link || []).filter(matched)[0];
+            if(res && res.href){
+                args.url = res.href;
+                return args;
+            }
+            else{
+                throw new Error("No " + rel + " link found in bundle");
+            }
+        }
     };
 
-    var CatchErrors = Operation(errors);
-    var ReturnHeader = Operation(header('Prefer', 'return=representation'));
+    var CatchErrors = errors;
+    var ReturnHeader = header('Prefer', 'return=representation');
 
     var copyAttr = function(from, to, attr){
         var v =  from[attr];
@@ -59,17 +57,15 @@
     };
 
     var InjectConfig = function(cfg, adapter){
-        return Operation(function(h){
-            return function(args){
-                copyAttr(cfg, args, 'baseUrl');
-                copyAttr(cfg, args, 'cache');
-                copyAttr(cfg, args, 'auth');
-                copyAttr(cfg, args, 'patient');
-                copyAttr(cfg, args, 'debug');
-                copyAttr(adapter, args, 'defer');
-                copyAttr(adapter, args, 'http');
-                return h(args);
-            };
+        return Operation(function(args){
+            copyAttr(cfg, args, 'baseUrl');
+            copyAttr(cfg, args, 'cache');
+            copyAttr(cfg, args, 'auth');
+            copyAttr(cfg, args, 'patient');
+            copyAttr(cfg, args, 'debug');
+            copyAttr(adapter, args, 'defer');
+            copyAttr(adapter, args, 'http');
+            return args;
         });
     };
 
@@ -77,6 +73,9 @@
         return function(args){
             if(args.debug){
                 console.log("\nDEBUG (request):", args.method, args.url, args);
+            }
+            if (args.then){
+                return args;
             }
             var promise = (args.http || adapter.http  || cfg.http)(args);
             if (args.debug && promise && promise.then){
@@ -94,11 +93,11 @@
 
     var fhir = function(cfg, adapter){
         var Defaults = InjectConfig(cfg, adapter)
-                .and(CatchErrors)
-                .and(auth.Basic)
-                .and(auth.Bearer)
-                .and(header('Accept', 'application/json'))
-                .and(header('Content-Type', 'application/json'));
+        .and(CatchErrors)
+        .and(auth.Basic)
+        .and(auth.Bearer)
+        .and(header('Accept', 'application/json'))
+        .and(header('Content-Type', 'application/json'));
 
         var GET = Defaults.and(Method('GET'));
         var POST = Defaults.and(Method('POST'));
@@ -133,7 +132,7 @@
             update: PUT.and(resourcePath).and(ReturnHeader).and(JsonData).end(http),
             nextPage: GET.and(BundleRelUrl("next")).end(http),
             prevPage: GET.and(BundleRelUrl("prev")).end(http),
-            resolve: GET.and(Operation(resolve.resolve)).end(http)
+            resolve: GET.and(resolve.resolve).end(http)
         };
 
     };

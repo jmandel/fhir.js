@@ -4,8 +4,7 @@
         "MedicationPrescription": "patient"
     };
 
-    var withPatient = function(h){
-        return function(args){
+    var withPatient = function(args){
             var type  = args.type;
             var param = keyFor[type];
             if (args.patient && param){
@@ -15,8 +14,7 @@
                     _id: args.patient
                 };
             }
-            return h(args);
-        };
+            return args;
     };
 
     exports.withPatient = withPatient;

@@ -1,7 +1,6 @@
-module.exports = function(h){
-    return function(args){
+module.exports = function(args){
         try{
-            return h(args);
+            return args;
         }catch(e){
             if(args.debug){
                console.log("\nDEBUG: (ERROR in middleware)");
@@ -13,5 +12,4 @@ module.exports = function(h){
             deff.reject(e);
             return deff.promise;
         }
-    };
 };

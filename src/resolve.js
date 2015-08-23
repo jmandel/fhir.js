@@ -25,8 +25,7 @@
         return bundled || (cache != null ? cache[abs] : void 0) || null;
     };
 
-    var resolve = function(h){
-        return function(args) {
+    var resolve = function(args) {
             var cacheMatched = sync(args);
             var ref = args.reference;
             var def = args.defer();
@@ -42,8 +41,7 @@
                 throw new Error("Contained resource not found");
             }
             args.url = utils.absoluteUrl(args.baseUrl, ref.reference);
-            return h(args);
-        };
+            return args;
     };
 
     module.exports.sync = sync;

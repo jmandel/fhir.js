@@ -9,22 +9,18 @@
       return args;
   };
 
-  var Basic = function(h){
-      return function(args){
+  var Basic = function(args){
           if(args.auth && args.auth.user && args.auth.pass){
               authHeader(args, "Basic " + btoa(args.auth.user + ":" + args.auth.pass));
           }
-          return h(args);
-      };
+          return args;
   };
 
-  var Bearer = function(h){
-      return function(args){
+  var Bearer = function(args){
           if(args.auth && args.auth.bearer){
               authHeader(args, "Bearer " + args.auth.bearer);
           }
-          return h(args);
-      };
+          return args;
   };
 
   exports.Basic = Basic;

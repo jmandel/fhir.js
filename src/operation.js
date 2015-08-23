@@ -4,27 +4,34 @@
     var id = function(x){return x;};
     var constantly = function(x){return function(){return x;};};
 
-    var mwComposition = function(mw1, mw2){
-        return function(h){ return mw1(mw2(h)); };
+    var Operation = function(mw){
+        mw = mw || id;
+
+        var asOperation = function(h){
+            return function(args){
+              return h(mw(args));
+            }
+        };
+        asOperation.and = function(nmw){
+            return Operation(function(args){
+                return nmw(mw(args)); 
+            }); 
+        }
+
+        asOperation.end = function(h){
+          return asOperation(h);
+        }
+
+        return asOperation;
     };
 
-    var Operation = function(mw){
-        mw.and = function(nmw){
-            return Operation(mwComposition(mw, nmw));
-        };
-        mw.end = function(h){
-            return mw(h);
-        };
-        return mw;
-    };
+    var Start = Operation();
 
     var Attribute = function(attr, fn){
-        return Operation(function(h){
             return function(args) {
                 args[attr] = fn(args);
-                return h(args);
-            };
-        });
+                return args;
+            }
     };
 
     var Method = function(method){
@@ -34,13 +41,13 @@
     var buildPathPart = function(pth, args){
         var k = null;
         switch (utils.type(pth)) {
-        case 'string':
-            k = pth.indexOf(":") == 0 ? args[pth.substring(1)] : pth;
-            break;
-        case 'function':
-            k = pth(args);
-            break;
-            defalut: k = pth;
+            case 'string':
+                k = pth.indexOf(":") == 0 ? args[pth.substring(1)] : pth;
+                break;
+            case 'function':
+                k = pth(args);
+                break;
+                defalut: k = pth;
         }
         if(k==null || k === undefined){ throw new Error("Parameter "+pth+" is required: " + JSON.stringify(args)); }
         return k;
@@ -63,6 +70,7 @@
     };
 
 
+    exports.Start = Start;
     exports.Path = Path;
     exports.Operation = Operation;
     exports.Attribute = Attribute;

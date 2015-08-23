@@ -1,6 +1,7 @@
 subj = require('../src/operation')
 
 Operation = subj.Operation;
+Start = subj.Start;
 Path = subj.Path;
 Method = subj.Method;
 Attribute = subj.Attribute;
@@ -18,33 +19,32 @@ describe "Path",->
     p3 = p2.slash("_history")
     p4 = p3.slash((args)-> args.versionId)
 
-    expect(apply(p0, {}).url).toEqual("BASE")
-    expect(apply(p1, {type: 'Patient'}).url).toEqual("BASE/Patient")
-    expect(apply(p2, {type: 'Patient',id: 5}).url).toEqual("BASE/Patient/5")
-    expect(apply(p3, {type: 'Patient',id: 5}).url).toEqual("BASE/Patient/5/_history")
-    expect(apply(p4, {type: 'Patient',id: 5, versionId: 6}).url).toEqual("BASE/Patient/5/_history/6")
+    expect(apply(Start.and(p0), {}).url).toEqual("BASE")
+    expect(apply(Start.and(p1), {type: 'Patient'}).url).toEqual("BASE/Patient")
+    expect(apply(Start.and(p2), {type: 'Patient',id: 5}).url).toEqual("BASE/Patient/5")
+    expect(apply(Start.and(p3), {type: 'Patient',id: 5}).url).toEqual("BASE/Patient/5/_history")
+    expect(apply(Start.and(p4), {type: 'Patient',id: 5, versionId: 6}).url).toEqual("BASE/Patient/5/_history/6")
 
 describe "Operation",->
   it "build path & combine",->
 
     path = Path("BASE").slash(":type").slash(":id")
 
-    GET = Method("GET")
+    GET = Operation().and((x)=>x).and((x)=>x).and(Method("GET"))
     op = GET.and(path)
-
+    console.log "test",  apply(op, {type: 'Patient',id: 5})
 
     res = apply(op, {type: 'Patient',id: 5})
     expect(res.method).toEqual("GET")
     expect(res.url).toEqual("BASE/Patient/5")
 
-    POST = Method("POST")
+    POST = Start.and(Method("POST"))
     jsonify = Attribute('data',(args)-> JSON.stringify(args.resource))
     typePath = Path("BASE").slash(":type")
-    xhr = (h)->
-      (args)->
-        opts  = h(args)
-        opts.send = true
-        return opts
+    xhr = (args)->
+      opts = args
+      opts.send = true
+      return opts
 
     create = POST.and(typePath).and(jsonify).and(xhr)
     res = apply(create, {type: 'Patient',resource: {name: "Ivan"}})
